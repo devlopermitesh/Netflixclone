@@ -1,44 +1,63 @@
-import React from 'react'
-import * as Dialog from '@radix-ui/react-dialog'
-import { IoCloseSharp } from "react-icons/io5";
-import { twMerge } from 'tailwind-merge';
-interface ModalProps {
- isopen:boolean,
- onchange:(open:boolean)=>void
- title:string   
- url?:string,
- description:string
- children:React.ReactNode
+"use client"; // Client-side component
 
-}
-const Modals: React.FC<ModalProps> = ({isopen,onchange,title,url,description,children}) => {
+import * as Dialog from "@radix-ui/react-dialog";
+import { twMerge } from "tailwind-merge";
+import { IoCloseSharp } from "react-icons/io5";
+
+type DialogProps = {
+  isopen: boolean;
+  onchange: (open: boolean) => void;
+  title: string;
+  description: string;
+  children: React.ReactNode;
+};
+
+const CustomDialog = ({ isopen, onchange, title, description, children }: DialogProps) => {
   return (
     <Dialog.Root open={isopen} onOpenChange={onchange}>
-		{/* <Dialog.Trigger asChild>
-			<button className="Button violet">{title}</button>
-		</Dialog.Trigger> */}
-		<Dialog.Portal>
-			<Dialog.Overlay className="bg-neutral-900/90 backdrop-blur-sm fixed inset-0" />
-			<Dialog.Content className={twMerge(`fixed drop-shadow-md border border-neutral-700 left-[50%] top-[50%] max-h-full h-full  
-            md:h-auto md:max-h-[85vh] w-full md:w-[90vw] md:max-w-[450px] translate-x-[-50%] translate-y-[-50%] rounded-md bg-neutral-800 p-[25px] focus:outline-none`)} >
-                <Dialog.Content className="relative ">
-                    <img src={url} alt="modal" className="w-full h-40 object-cover rounded-md mb-4" />
-                    </Dialog.Content>
-				<Dialog.Title className="text-white text-xl font-bold mb-4 text-center">{title}</Dialog.Title>
-				<Dialog.Description className="text-white text-center mb-5 leading-normal text-sm">
-                    {description}
-				</Dialog.Description>
+      <Dialog.Portal>
+        {/* Overlay */}
+        <Dialog.Overlay className="bg-neutral-900/90 backdrop-blur-sm fixed inset-0" />
 
-        {children}
-				<Dialog.Close asChild className='absolute top-4 right-4  inline-flex items-center justify-center '>
-					<button className="IconButton" onClick={()=>onchange(false)} aria-label="Close">
-                        <IoCloseSharp />
-					</button>
-				</Dialog.Close>
-			</Dialog.Content>
-		</Dialog.Portal>
-	</Dialog.Root>
-  )
-}
+        {/* Main Content Container */}
+        <Dialog.Content
+          className={twMerge(
+            "fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%]",
+            "w-full md:w-[90vw] md:max-w-[550px] h-full md:h-auto md:max-h-[85vh]",
+            "bg-neutral-800 border border-neutral-700 rounded-md p-[25px]",
+            "drop-shadow-md focus:outline-none overflow-y-auto scroll-smooth",
+            "[&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]" // Scrollbar hide
+          )}
+        >
+          {/* Title */}
+          <Dialog.Title className="text-white text-xl font-bold mb-4 text-center">
+            {title}
+          </Dialog.Title>
 
-export default Modals
+          {/* Description */}
+          <Dialog.Description className="text-white text-center mb-5 leading-normal text-sm">
+            {description}
+          </Dialog.Description>
+
+          {/* Scrollable Children */}
+          <div className="max-h-[60vh] overflow-y-auto scroll-smooth">
+            {children}
+          </div>
+
+          {/* Close Button */}
+          <Dialog.Close asChild>
+            <button
+              className="absolute top-4 right-4 inline-flex items-center justify-center text-white hover:text-gray-300"
+              onClick={() => onchange(false)}
+              aria-label="Close"
+            >
+              <IoCloseSharp size={24} />
+            </button>
+          </Dialog.Close>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
+  );
+};
+
+export default CustomDialog;

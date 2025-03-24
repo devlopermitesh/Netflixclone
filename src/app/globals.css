@@ -19,3 +19,49 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 
 }
+
+@keyframes wave {
+  0% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(15deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+.animate-wave {
+  display: inline-block;
+  animation: wave 1.5s infinite ease-in-out;
+  transform-origin: center;
+}
+
+
+.scrollbar-hide {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+html{
+  scroll-behavior: smooth;
+}
+::-webkit-scrollbar{
+  width:10px;
+
+}
+::-webkit-scrollbar-track{
+  background:transparent;
+}
+::-webkit-scrollbar-thumb{
+  border-radius: 12px;
+
+  background: rgb(67, 65, 65);
+}
+::-webkit-scrollbar-thumb:hover{
+      background:white;
+  
+}

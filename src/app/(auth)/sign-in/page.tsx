@@ -11,6 +11,10 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import Link from 'next/link';
+import { toast } from 'react-toastify';
+import { signIn, useSession } from 'next-auth/react';
+import { redirect, useRouter } from 'next/navigation';
+import { useCurrentUser } from '@/hook/useCurrentuser';
 
 const signInSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -29,10 +33,31 @@ const Page = () => {
       password: '',
     },
   });
-
+  const router=useRouter()
+ const {data,isLoading,error}=useCurrentUser();
+ 
+ if (!isLoading && data && data.email ) {
+  redirect("/app");
+}
   const onSubmit = async (data: z.infer<typeof signInSchema>) => {
-    console.log('Login Data:', data);
-    // TODO: Add actual login functionality here
+try {
+  const response = await signIn("credentials", { 
+    password: data.password, 
+    email: data.email, 
+    redirect: false, 
+  });
+  if (response?.error) {
+    toast.error(`Error In loggin:${response.error}`)
+  }
+  if (response?.ok) {
+    toast.success(`Success:You have logged in successfully`)
+    router.push("/app")
+}
+ }
+catch (error) {
+  console.log(error)
+  toast.error("Something Went Wrong !")
+}
   };
 
   return (
@@ -79,11 +104,11 @@ const Page = () => {
         </Button>
         <div className='flex flex-row items-center justify-center my-5'>
         
-        <Image src={GoogleIcon} alt="logo" width={100} height={100} className='rounded-full border-white border-2 w-15 h-15  mx-2 cursor-pointer hover:shadow-2xl hover:shadow-white'/>
+        <Image src={GoogleIcon} alt="logo" width={100} height={100} className='rounded-full border-white border-2 w-15 h-15  mx-2 cursor-pointer hover:shadow-2xl hover:shadow-white'  onClick={()=>signIn("google",{callbackUrl:"/app"})}/>
         
-     <Image src={GithubIcon} alt="logo" width={100} height={100} className='rounded-full border-white border-2 w-15 h-15 mx-2 cursor-pointer hover:shadow-2xl hover:shadow-white'/>
+     <Image src={GithubIcon} alt="logo" width={100} height={100} className='rounded-full border-white border-2 w-15 h-15 mx-2 cursor-pointer hover:shadow-2xl hover:shadow-white' onClick={()=>signIn("github",{callbackUrl:"/app"})}/>
         </div>
-        <p className='text-gray-400'>First Time using TinyToons? <Link href="/sign-up" className='text-[#ff0000b7]'>Sign Up</Link></p>
+        <p className='text-gray-400'>First Time using Netflix? <Link href="/sign-up" className='text-[#ff0000b7]'>Sign Up</Link></p>
       </form>
      
     </div>

@@ -11,6 +11,10 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import Link from 'next/link';
+import axios from 'axios';
+import { useRouter } from "next/navigation";
+import { toast } from 'react-toastify';
+import { signIn } from 'next-auth/react';
 
 const signupschema = z.object({
 username: z.string().nonempty('Username is required'),
@@ -30,10 +34,23 @@ const Page = () => {
       password: '',
     },
   });
-
+  const router = useRouter();
   const onSubmit = async (data: z.infer<typeof signupschema>) => {
-    console.log('Login Data:', data);
-    // TODO: Add actual login functionality here
+    try {
+      const response=await axios.post("/api/sign-up",data)
+      if (response.data.success) {
+        toast.success("Account Created SuccessFully");
+    router.replace(`/sign-in`);
+
+    } 
+  
+    
+  }
+
+  catch (error) {
+      console.log(error)
+        toast.error("Error:Something went wrong");
+    }
   };
 
   return (
@@ -89,9 +106,9 @@ const Page = () => {
         </Button>
         <div className='flex flex-row items-center justify-center my-5'>
         
-        <Image src={GoogleIcon} alt="logo" width={100} height={100} className='rounded-full border-white border-2 w-15 h-15  mx-2 cursor-pointer hover:shadow-2xl hover:shadow-white'/>
+        <Image src={GoogleIcon} alt="logo" width={100} height={100} className='rounded-full border-white border-2 w-15 h-15  mx-2 cursor-pointer hover:shadow-2xl hover:shadow-white'  onClick={()=>signIn("google",{callbackUrl:"/app"})}/>
         
-        <Image src={GithubIcon} alt="logo" width={100} height={100} className='rounded-full border-white border-2 w-15 h-15 mx-2 cursor-pointer hover:shadow-2xl hover:shadow-white'/>
+        <Image src={GithubIcon} alt="logo" width={100} height={100} className='rounded-full border-white border-2 w-15 h-15 mx-2 cursor-pointer hover:shadow-2xl hover:shadow-white' onClick={()=>signIn("github",{callbackUrl:"/app"})}/>
         </div>
         <p className='text-gray-400'>Already have an account <Link href="/sign-in" className='text-[#ff0000]'>Sign In</Link></p>
       </form>
