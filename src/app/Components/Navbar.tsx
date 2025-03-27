@@ -6,15 +6,31 @@ import { FaChevronDown } from "react-icons/fa6";
 import { BsSearch } from "react-icons/bs";
 import { BsBell } from "react-icons/bs";
 import MobileMenu from "./MobileMenu";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Avatar from "boring-avatars"
 import AccountMenu from "./AccountMenu";
 const Navbar=()=>{
     const [IsvisibleMobileMenu,setIsvisibleMobileMenu]=useState(false)
     const [IsvisibleAccountMenu,setIsvisibleAccountMenu]=useState(false)
+    const [scroll, setScroll] = useState(false);
+
+    useEffect(() => {
+      const handleScroll = () => {
+        if (window.scrollY > 80) {
+          setScroll(true);
+        } else {
+          setScroll(false);
+        }
+      };
+  
+      window.addEventListener("scroll", handleScroll);
+      return () => window.removeEventListener("scroll", handleScroll);
+    }, []);
+  
 return (
     <nav className="w-full z-40 fixed">
-<div className="flex flex-row items-center transition bg-zinc-900 bg-opacity-90 px-4 md:px-16 py-2">
+<div className={`flex flex-row items-center transition  bg-opacity-90 px-4 md:px-16 py-2 
+    ${ scroll ? " bg-zinc-900" : "bg-transparent"}`}>
 <Image src={Logo} alt="App Logo" height={100} width={100} className=""/>
 <div className="hidden flex-row ml-9 gap-7 lg:flex">
 <NavbarItems Label={"Home"}/>

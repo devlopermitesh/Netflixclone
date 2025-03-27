@@ -2,10 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import prismadb from "../../../../lib/prismadb";
 import CloudinaryUploader from "@/Helpers/uploadCloudinary";
 import { UploadApiResponse } from "cloudinary";
-
+import { v4 as uuidv4 } from 'uuid'
+import ServerAuth from "../../../../lib/serverAuth";
 export async function POST(req: NextRequest) {
     try {
+      const user=await ServerAuth(req)
+      if (user.role !== "Admin") {
+          return NextResponse.json(
+          { success: false, message: "Unauthorized: Only admins can upload movies" },
+          { status: 403 }
+          );
+      }
         const formData = await req.formData();
+        console.log("formData",formData.get("title"))
         const title = formData.get("title") as string | null;
         const description = formData.get("description") as string | null;
         const genre = formData.get("genre") as string | null;
@@ -58,54 +67,36 @@ export async function POST(req: NextRequest) {
     let videoResult: UploadApiResponse | null = null;
         try {
             // Upload all files in parallel
-            [thumbnailResult, trailerResult, videoResult] = await Promise.all([
-              uploader.upload(thumbnail!, { folder: "thumbnail", isVideo: false, generateThumbnail: false }),
+            [ trailerResult, videoResult,thumbnailResult] = await Promise.all([
               uploader.upload(trailer!, { folder: "trailer", isVideo: true, generateThumbnail: true }),
               uploader.upload(video!, { folder: "Movies", isVideo: true, generateThumbnail: true }),
-            ]);
-      // Check if any upload is still "pending"
-      const pendingUploads = [thumbnailResult, trailerResult, videoResult].filter(
-        (result) => result.status === "pending"
-      );
+              uploader.upload(thumbnail!, { folder: "thumbnail", isVideo: false, generateThumbnail: false }),
 
-      if (pendingUploads.length > 0) {
-        // Return early with "pending" status
-        return NextResponse.json(
-          {
-            success: true,
-            message: "Upload started—processing in background. Check back later!",
-            data: {
-              thumbnailPublicId: thumbnailResult.public_id || null,
-              trailerPublicId: trailerResult.public_id || null,
-              videoPublicId: videoResult.public_id || null,
-              batchIds: [thumbnailResult.batch_id, trailerResult.batch_id, videoResult.batch_id],
-            },
-          },
-          { status: 202 } // Accepted, processing pending
-        );
-      }
-            // Check if all uploads succeeded
-            if (!thumbnailResult?.secure_url || !trailerResult?.secure_url || !videoResult?.secure_url) {
-              throw new Error("One or more uploads failed to return a secure URL");
-            }
+            ]);
+     console.log("Video data",videoResult)
+            const tempRecord = await prismadb.tempUploads.create({
+              data: {
+                publicId:"12345" , // Reference video public_id
+                title: title || "Untitled", // Ensure title is a non-null string
+                description: description || "No description provided",
+                genre: genre || "Unknown Genre",
+                thumbnailUrl: thumbnailResult.secure_url || "",
+                trailerUrl: trailerResult.secure_url || "",
+                videoUrl: videoResult.secure_url || "",
+              },
+            });
+        
+            return NextResponse.json(
+              {
+                success: true,
+                message: "Upload started—processing in background",
+                data: { tempId: tempRecord.id, publicIds: [thumbnailResult.public_id, trailerResult.public_id, videoResult.public_id] },
+              },
+              { status: 202 }
+            );
+
           } catch (error: any) {
-            // Rollback: Delete uploaded files if any failed
-            const rollbackPromises: Promise<void>[] = [];
-            if (thumbnailResult?.public_id) {
-              rollbackPromises.push(uploader.delete(thumbnailResult.public_id, "image"));
-            }
-            if (trailerResult?.public_id) {
-              rollbackPromises.push(uploader.delete(trailerResult.public_id, "video"));
-            }
-            if (videoResult?.public_id) {
-              rollbackPromises.push(uploader.delete(videoResult.public_id, "video"));
-            }
-      
-            if (rollbackPromises.length > 0) {
-              await Promise.all(rollbackPromises);
-              console.log("Rollback complete—deleted uploaded files from Cloudinary");
-            }
-      
+            
             return NextResponse.json(
               {
                 success: false,
@@ -115,31 +106,6 @@ export async function POST(req: NextRequest) {
               { status: error.http_code || 500 }
             );
           }
-      
-      
-function formatDuration(seconds:number):string {
-  const minutes = Math.floor(seconds / 60); 
-  const remainingSeconds = Math.floor(seconds % 60); // Bacha hua seconds
-  return `${minutes}:${remainingSeconds.toString().padStart(2, "0")} Minutes`; 
-
-}
-const duration= formatDuration(videoResult.duration)
-        await prismadb.movies.create({
-            data: {
-                title: title ? title.toString() : "",
-                description: description ? description.toString() : "",
-                genre: genre ? genre.toString() : "",
-                thumbnailUrl: thumbnailResult.secure_url,
-                trailerUrl: trailerResult.secure_url,
-                VidoeUrl: videoResult.secure_url || "N/A",
-                duration ,
-            },
-        });
-
-        return NextResponse.json(
-            { success: true, message: "Movie uploaded successfully" },
-            { status: 200 }
-        );
 
     } catch (error:any) {
         if (error.http_code === 400 && error.message.includes("too large to process synchronously")) {

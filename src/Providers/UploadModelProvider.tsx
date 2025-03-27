@@ -10,6 +10,7 @@ import Button from '@/app/Components/Button'
 import { twMerge } from 'tailwind-merge'
 import { toast } from 'react-toastify'
 import { Input } from '@/app/Components/Input'
+import { useProgressTracker } from '@/hook/useProgressTracker'
 // Define the schema validation for the Movies model
 const uploadMovieSchema = z.object({
     title: z.string().min(1, "Title is required"),
@@ -37,7 +38,7 @@ const uploadMovieSchema = z.object({
 export type UploadMovieType = z.infer<typeof uploadMovieSchema>;
 const UploadModelProvider = () => {
     const [isUploading, setIsUploading] = useState(false);
-    const [progress, setProgress] = useState<number>(0);
+  const {progress,setProgress}=useProgressTracker()
     const {onClose,onOpen,isOpen}=useuploadModel((state)=>state)
     const methods = useForm<UploadMovieType>({
         resolver: zodResolver(uploadMovieSchema),

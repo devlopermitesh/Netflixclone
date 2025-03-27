@@ -1,4 +1,4 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "next-auth/react";
 import prisma from "./prismadb"; 
 
@@ -16,13 +16,13 @@ const ServerAuth = async (req: NextRequest) => {
         });
 
         if (!currentUser) {
-            throw new Error("User not found");
+       return null;
         }
 
         return currentUser;
     } catch (error) {
-        console.error(error);
-        throw new Error("Authentication failed");
+      
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 };
 

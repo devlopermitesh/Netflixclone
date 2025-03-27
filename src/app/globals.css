@@ -37,8 +37,42 @@ body {
   animation: wave 1.5s infinite ease-in-out;
   transform-origin: center;
 }
+@keyframes shrinkAndFade {
+  0% {
+      transform: scale(1);
+      opacity: 1;
+  }
+  100% {
+      transform: scale(0);
+      opacity: 0;
+      width: 0;
+      height: 0;
+  }
+}
+@keyframes growAndAppear {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
 
+.animate-progessButton{
+  border-radius:"50%";
 
+  animation: shrinkAndFade 1s ease-out forwards;
+  transition: transform 0.3s ease;
+}
+.animate-progessText{
+color:red;
+}
+.animate-progressBar{
+  animation: growAndAppear 0.8s ease-out forwards;
+  transition: transform 0.3s ease;
+}
 .scrollbar-hide {
   -ms-overflow-style: none; /* IE and Edge */
   scrollbar-width: none; /* Firefox */
@@ -65,3 +99,4 @@ html{
       background:white;
   
 }
+
